@@ -130,3 +130,80 @@
    CreateTime:1724466966554        Partition:2     null    two
    ``` 
 
+## Kafka Console Consumer group commands
+
+**Prerequisites:** Create a new topic with 3 partitions
+
+```bash
+kafka-topics.sh --bootstrap-server localhost:9092 --topic fourth_topic --create --partitions 3
+```
+
+1. Create a first consumer in consumer group:
+```bash
+root@Sonu:~# kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic fourth_topic --group my-first-group
+```
+
+2. Create a producer to produce messages:
+```bash
+kafka-console-producer.sh --bootstrap-server localhost:9092 --producer-property partitioner.class=org.apache.kafka.clients.producer.RoundRobinPartitioner --topic fourth_topic
+>one
+>two
+>three
+>four
+```
+
+3. Create more consumers in a group and message spread:
+```bash
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic fourth_topic --group my-first-group
+one
+four
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic fourth_topic --group my-first-group
+three
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic fourth_topic --group my-first-group
+two
+```
+
+4. Create a new group with from beginning option:
+```bash
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic fourth_topic --group my-fourth-group --from-beginning
+two
+one
+four
+three
+```
+
+## Kafka Consumer Group commands
+1. List consumer groups
+   
+```bash
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+my-fourth-group
+my-first-group
+my-third-group
+my-second-group
+```
+
+2. Describe a consumer group
+
+```bash
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-first-group
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                           HOST            CLIENT-ID
+my-first-group  fourth_topic    0          3               3               0               console-consumer-e6eb8120-3613-4b28-b722-6917474e8d46 /127.0.0.1      console-consumer
+my-first-group  fourth_topic    1          3               3               0               console-consumer-e6eb8120-3613-4b28-b722-6917474e8d46 /127.0.0.1      console-consumer
+my-first-group  fourth_topic    2          2               2               0               console-consumer-e91f28d3-403b-45b4-89a7-1fb60566fe95 /127.0.0.1      console-consumer
+```
+
+3. Reset offsets
+
+```bash
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-first-group --reset-offsets --to-earliest --topic fourth_topic --execute
+
+WARN [AdminClient clientId=adminclient-1] The DescribeTopicPartitions API is not supported, using Metadata API to describe topics. (org.apache.kafka.clients.admin.KafkaAdminClient)
+
+GROUP                          TOPIC                          PARTITION  NEW-OFFSET     
+my-first-group                 fourth_topic                   0          0              
+my-first-group                 fourth_topic                   1          0              
+my-first-group                 fourth_topic                   2          0             
+```
+
